@@ -18,9 +18,9 @@ services:
         value: proj_sqwhvsbomybtuvhneibb
       - key: JWT_SECRET
         generateValue: true
-      - key: KIMI_API_ENDPOINT
-        value: https://api.moonshot.cn/v1/chat/completions
-      - key: KIMI_API_KEY
+      - key: GEMINI_API_ENDPOINT
+        value: # Handled by SDK
+      - key: GEMINI_API_KEY
         sync: false
       - key: UPLOAD_DIR
         value: /tmp/uploads

@@ -1,31 +1,35 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { logger } from "./logger";
 
-const KIMI_API_ENDPOINT =
-  process.env.KIMI_API_ENDPOINT || "https://api.moonshot.cn/v1/chat/completions";
-const KIMI_API_KEY = process.env.KIMI_API_KEY || "";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-1.5-flash";
 
 /**
- * Kimi API error with structured fields for retry policies.
+ * Initialize Gemini client
  */
-export class KimiApiError extends Error {
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+
+/**
+ * Gemini API error with structured fields for retry policies.
+ */
+export class GeminiApiError extends Error {
   constructor(
     message: string,
     public statusCode?: number,
     public responseBody?: string
   ) {
     super(message);
-    this.name = "KimiApiError";
+    this.name = "GeminiApiError";
   }
 }
 
 /**
- * Wraps the Kimi (Moonshot) API.
+ * Wraps the Google Gemini API.
  *
  * Accepts a user prompt and a system prompt.
- * Parses the JSON response, validates that `confidence` is present,
- * and throws a typed error on non-200 responses so the retry policy activates.
+ * Returns the generated text content.
  */
-export async function callKimi(opts: {
+export async function callGemini(opts: {
   systemPrompt: string;
   userPrompt: string;
   temperature?: number;
@@ -35,59 +39,48 @@ export async function callKimi(opts: {
   content: string;
   rawResponse: any;
 }> {
-  const { systemPrompt, userPrompt, temperature = 0.2, maxTokens = 4000, model = "kimi-k2-6" } = opts;
+  const { systemPrompt, userPrompt, temperature = 0.2, maxTokens = 8192, model = GEMINI_MODEL } = opts;
 
-  if (!KIMI_API_KEY) {
-    throw new KimiApiError("KIMI_API_KEY is not configured");
+  if (!GEMINI_API_KEY) {
+    throw new GeminiApiError("GEMINI_API_KEY is not configured");
   }
 
-  const body = {
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userPrompt },
-    ],
-    temperature,
-    max_tokens: maxTokens,
-  };
+  try {
+    const geminiModel = genAI.getGenerativeModel({ 
+      model,
+      generationConfig: {
+        temperature,
+        maxOutputTokens: maxTokens,
+      }
+    });
 
-  const res = await fetch(KIMI_API_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${KIMI_API_KEY}`,
-    },
-    body: JSON.stringify(body),
-  });
+    // Combine system prompt and user prompt
+    const prompt = `${systemPrompt}\n\n---\n\n${userPrompt}`;
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    logger.error(
-      { status: res.status, body: text },
-      "Kimi API returned non-200 response"
-    );
-    throw new KimiApiError(
-      `Kimi API error: ${res.status} ${res.statusText}`,
-      res.status,
-      text
+    const result = await geminiModel.generateContent(prompt);
+    const response = await result.response;
+    const content = response.text();
+
+    if (!content) {
+      throw new GeminiApiError("Gemini API response missing content");
+    }
+
+    return { content, rawResponse: result };
+  } catch (err: any) {
+    logger.error({ error: err.message, status: err.status }, "Gemini API call failed");
+    throw new GeminiApiError(
+      `Gemini API error: ${err.message}`,
+      err.status,
+      err.message
     );
   }
-
-  const data = await res.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new KimiApiError("Kimi API response missing content");
-  }
-
-  return { content, rawResponse: data };
 }
 
 /**
- * Attempts to parse the Kimi response content as JSON.
+ * Attempts to parse the Gemini response content as JSON.
  * If parsing fails, wraps the raw text in a structured object.
  */
-export function parseKimiJson(content: string): { data: any; raw: string; confidence?: number } {
+export function parseGeminiJson(content: string): { data: any; raw: string; confidence?: number } {
   let cleaned = content.trim();
 
   // Strip markdown code fences if present
@@ -102,7 +95,7 @@ export function parseKimiJson(content: string): { data: any; raw: string; confid
     const confidence = typeof parsed.confidence === "number" ? parsed.confidence : undefined;
     return { data: parsed, raw: content, confidence };
   } catch (err) {
-    logger.warn({ err, contentPreview: content.slice(0, 200) }, "Kimi response was not valid JSON");
+    logger.warn({ err, contentPreview: content.slice(0, 200) }, "Gemini response was not valid JSON");
     return { data: { rawText: content, extractError: true }, raw: content };
   }
 }
