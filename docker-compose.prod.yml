@@ -1,0 +1,104 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cargo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-cargoflow}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - cargoflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cargo} -d ${POSTGRES_DB:-cargoflow}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    image: ghcr.io/cargoflow/api:latest
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cargo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-cargoflow}
+      WS_SERVER_URL: http://realtime:3001
+      NODE_ENV: production
+      API_PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      KIMI_API_KEY: ${KIMI_API_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
+      METRICS_API_KEY: ${METRICS_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - cargoflow
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  worker:
+    image: ghcr.io/cargoflow/worker:latest
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cargo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-cargoflow}
+      WS_SERVER_URL: http://realtime:3001
+      NODE_ENV: production
+      TRIGGER_API_KEY: ${TRIGGER_API_KEY}
+      KIMI_API_KEY: ${KIMI_API_KEY}
+      SENTRY_DSN: ${SENTRY_DSN}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - cargoflow
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  realtime:
+    image: ghcr.io/cargoflow/realtime:latest
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    networks:
+      - cargoflow
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/ssl:/etc/letsencrypt:ro
+    depends_on:
+      - api
+      - realtime
+    networks:
+      - cargoflow
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - cargoflow
+
+volumes:
+  pg_data:
+  uploads:
+  redis_data:
+
+networks:
+  cargoflow:
+    driver: bridge

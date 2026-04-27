@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: cargoflow-api
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: TRIGGER_API_KEY
+        sync: false
+      - key: TRIGGER_PROJECT_ID
+        value: proj_sqwhvsbomybtuvhneibb
+      - key: JWT_SECRET
+        generateValue: true
+      - key: KIMI_API_ENDPOINT
+        value: https://api.moonshot.cn/v1/chat/completions
+      - key: KIMI_API_KEY
+        sync: false
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
+      - key: UPLOAD_MAX_SIZE
+        value: "52428800"
+      - key: API_PORT
+        value: "10000"
+      - key: WS_SERVER_URL
+        value: http://localhost:3001
+      - key: SENTRY_DSN
+        sync: false
+      - key: METRICS_API_KEY
+        sync: false

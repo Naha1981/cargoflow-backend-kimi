@@ -1,0 +1,57 @@
+{
+  "name": "cargoflow",
+  "version": "1.0.0",
+  "description": "CargoFlow — AEP Operations Intelligence System",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node src/api/server.ts",
+    "dev:realtime": "ts-node src/realtime/server.ts",
+    "dev:worker": "ts-node src/workers/event-consumer.ts",
+    "build": "tsc",
+    "start": "node dist/api/server.js",
+    "start:realtime": "node dist/realtime/server.js",
+    "start:worker": "node dist/workers/event-consumer.js",
+    "trigger:deploy": "npx trigger.dev@latest deploy",
+    "db:migrate": "ts-node sql/migrate.ts",
+    "lint": "tsc --noEmit",
+    "test": "jest"
+  },
+  "keywords": [
+    "logistics",
+    "ai",
+    "supply-chain",
+    "operations-intelligence"
+  ],
+  "author": "CargoFlow Engineering",
+  "license": "MIT",
+  "dependencies": {
+    "@sentry/node": "^7.100.0",
+    "@trigger.dev/sdk": "4.4.4",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.4.0",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "pdf-poppler": "^0.2.1",
+    "pg": "^8.11.3",
+    "pino": "^8.17.0",
+    "pino-pretty": "^10.3.0",
+    "tesseract.js": "^5.0.3",
+    "uuid": "^9.0.1",
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.11.0",
+    "@types/pg": "^8.10.9",
+    "@types/uuid": "^9.0.8",
+    "@types/ws": "^8.5.10",
+    "jest": "^29.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
