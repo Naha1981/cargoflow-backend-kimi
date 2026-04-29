@@ -7,7 +7,7 @@
     "dev": "ts-node src/api/server.ts",
     "dev:realtime": "ts-node src/realtime/server.ts",
     "dev:worker": "ts-node src/workers/event-consumer.ts",
-    "build": "tsc",
+    "build": "tsc --project tsconfig.api.json",
     "start": "node dist/api/server.js",
     "start:realtime": "node dist/realtime/server.js",
     "start:worker": "node dist/workers/event-consumer.js",

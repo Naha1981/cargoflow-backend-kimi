@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { query, tenantQuery, tenantQueryOne } from "../lib/db";
-import { authMiddleware, AuthenticatedRequest, requireRoles } from "./middleware";
+import { authMiddleware, AuthenticatedRequest } from "./middleware";
 import { logger } from "../lib/logger";
 
 const router = Router();

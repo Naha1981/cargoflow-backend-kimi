@@ -1,4 +1,4 @@
-import { pool, query } from "../lib/db";
+import { pool } from "../lib/db";
 import { emitEvent } from "../lib/event-emitter";
 import { logger } from "../lib/logger";
 

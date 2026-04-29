@@ -46,7 +46,7 @@ const roleHierarchy: Record<string, number> = {
   viewer: 10,
 };
 
-export function requireRoles(...allowedRoles: string[]) {
+export function requireRoles(...allowedRoles: string[]): (req: AuthenticatedRequest, res: Response, next: NextFunction) => void {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: "Authentication required" });

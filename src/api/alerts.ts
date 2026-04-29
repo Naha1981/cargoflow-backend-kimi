@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { query, tenantQuery } from "../lib/db";
+import { query } from "../lib/db";
 import { authMiddleware, AuthenticatedRequest } from "./middleware";
 import { logger } from "../lib/logger";
 

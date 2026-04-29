@@ -1,4 +1,5 @@
-import Tesseract from "tesseract.js";
+// Tesseract OCR - optional dependency
+// import Tesseract from "tesseract.js";
 import { logger } from "./logger";
 
 // pdf-poppler is optional; handle gracefully if not installed
@@ -66,10 +67,14 @@ export async function convertPdfToImages(pdfPath: string): Promise<string[]> {
 /**
  * Runs Tesseract.js OCR on an image and returns the extracted text.
  */
-export async function ocrImage(imagePath: string): Promise<string> {
+export async function ocrImage(_imagePath: string): Promise<string> {
+  // Tesseract is currently disabled - install tesseract.js to enable
+  throw new Error("OCR not available: tesseract.js is not installed. Install with: npm install tesseract.js");
+  
+  /*
   try {
     const result = await Tesseract.recognize(imagePath, "eng", {
-      logger: (m) => {
+      logger: (m: any) => {
         if (m.status === "recognizing text") {
           logger.debug({ progress: m.progress }, "OCR progress");
         }
@@ -77,9 +82,10 @@ export async function ocrImage(imagePath: string): Promise<string> {
     });
     return result.data.text;
   } catch (err: any) {
-    logger.error({ err, imagePath }, "OCR failed on image");
+    logger.error({ err, imagePath }, "OCR failed");
     throw new Error(`OCR failed: ${err.message}`);
   }
+  */
 }
 
 /**
