@@ -165,7 +165,8 @@ export async function collectPublicEvidence(
 
   const tasks: Promise<any>[] = [
     earthquakes(startDate, endDate, investigation.latitude ?? undefined, investigation.longitude ?? undefined),
-    sentinelCatalog(startDate, endDate),
+    sentinelCatalog(startDate, endDate, "SENTINEL-1"),
+    sentinelCatalog(startDate, endDate, "SENTINEL-2"),
     globalFishingWatchEvents(startDate, endDate)
   ];
 
@@ -328,6 +329,7 @@ export async function investigationReport(
       "Source-specific caveats must be considered before a dispute conclusion is made."
     ],
     evidence,
-    timeline
+    timeline,
+    facts
   };
 }
