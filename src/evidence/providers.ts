@@ -117,8 +117,12 @@ export async function aircraft(latitude: number, longitude: number) {
   };
 }
 
-export async function sentinelCatalog(startDate: string, endDate: string) {
-  const filter = "Collection/Name eq 'SENTINEL-1' and ContentDate/Start gt " +
+export async function sentinelCatalog(
+  startDate: string,
+  endDate: string,
+  collection: "SENTINEL-1" | "SENTINEL-2"
+) {
+  const filter = "Collection/Name eq '" + collection + "' and ContentDate/Start gt " +
     startDate + "T00:00:00.000Z and ContentDate/Start lt " +
     endDate + "T23:59:59.999Z";
   const url = new URL("https://catalogue.dataspace.copernicus.eu/odata/v1/Products");
@@ -126,13 +130,52 @@ export async function sentinelCatalog(startDate: string, endDate: string) {
   url.searchParams.set("$orderby", "ContentDate/Start desc");
   url.searchParams.set("$top", "20");
   return {
-    sourceType: "sentinel-1" as const,
+    sourceType: collection === "SENTINEL-1" ? "sentinel-1" as const : "sentinel-2" as const,
     sourceUrl: url.toString(),
     capturedAt: new Date().toISOString(),
-    title: "Copernicus Sentinel-1 catalogue hits " + startDate + " to " + endDate,
+    title: "Copernicus " + collection + " catalogue hits " + startDate + " to " + endDate,
     payload: await getJson(url.toString()),
     confidence: "reported" as const,
-    metadata: { startDate, endDate, downloadRequiresCopernicusAuth: true }
+    metadata: { startDate, endDate, collection, downloadRequiresCopernicusAuth: true }
+  };
+}
+
+export async function marineConditions(latitude: number, longitude: number, startDate: string, endDate: string) {
+  const url = new URL("https://marine-api.open-meteo.com/v1/marine");
+  url.searchParams.set("latitude", String(latitude));
+  url.searchParams.set("longitude", String(longitude));
+  url.searchParams.set("start_date", startDate);
+  url.searchParams.set("end_date", endDate);
+  url.searchParams.set(
+    "hourly",
+    [
+      "wave_height",
+      "wave_direction",
+      "wave_period",
+      "wind_wave_height",
+      "swell_wave_height",
+      "ocean_current_velocity",
+      "ocean_current_direction",
+      "sea_level_height_msl",
+      "sea_surface_temperature"
+    ].join(",")
+  );
+  url.searchParams.set("timezone", "UTC");
+  return {
+    sourceType: "tides" as const,
+    sourceUrl: url.toString(),
+    capturedAt: new Date().toISOString(),
+    title: "Marine conditions and modelled tide level " + startDate + " to " + endDate,
+    payload: await getJson(url.toString()),
+    confidence: "reported" as const,
+    metadata: {
+      latitude,
+      longitude,
+      startDate,
+      endDate,
+      provider: "Open-Meteo Marine",
+      caveat: "Modelled sea-level/tide data has limited coastal accuracy and is not navigation-grade."
+    }
   };
 }
 
