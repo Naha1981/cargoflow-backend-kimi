@@ -10,6 +10,7 @@ import {
   sentinelCatalog
 } from "./providers";
 import type { EvidenceItemInput, InvestigationInput } from "./types";
+import { deriveInvestigationSignals } from "./signals";
 
 export async function createInvestigation(
   tenantId: string,
@@ -242,6 +243,35 @@ export async function collectPublicEvidence(
     );
   }
 
+  const timelineRows = await query<Record<string, any>>(
+    "SELECT event_at, event_type, title, description, evidence_ids, confidence, source_type " +
+      "FROM investigation_events WHERE investigation_id=$1 AND tenant_id=$2 ORDER BY event_at ASC",
+    [investigationId, tenantId]
+  );
+
+  const signals = deriveInvestigationSignals(evidenceRows, timelineRows);
+
+  await query(
+    "DELETE FROM investigation_facts WHERE investigation_id=$1 AND tenant_id=$2 AND fact_type IN ('derived','interpretation')",
+    [investigationId, tenantId]
+  );
+
+  for (const signal of signals) {
+    await query(
+      "INSERT INTO investigation_facts " +
+        "(tenant_id, investigation_id, fact, value_json, source_evidence_ids, fact_type) " +
+        "VALUES ($1,$2,$3,$4,$5,$6)",
+      [
+        tenantId,
+        investigationId,
+        signal.fact,
+        JSON.stringify(signal.value),
+        JSON.stringify(signal.sourceEvidenceIds),
+        signal.factType
+      ]
+    );
+  }
+
   await query(
     "UPDATE investigations SET status='complete', updated_at=now() WHERE id=$1 AND tenant_id=$2",
     [investigationId, tenantId]
@@ -251,8 +281,10 @@ export async function collectPublicEvidence(
     investigationId,
     evidenceCount: inserted.length,
     timelineCount: timeline.length,
+    signalCount: signals.length,
     evidence: inserted,
-    timeline
+    timeline,
+    signals
   };
 }
 
@@ -275,6 +307,12 @@ export async function investigationReport(
   const timeline = await query<Record<string, any>>(
     "SELECT id, event_at, event_type, title, description, evidence_ids, confidence, source_type " +
       "FROM investigation_events WHERE investigation_id=$1 AND tenant_id=$2 ORDER BY event_at ASC",
+    [investigationId, tenantId]
+  );
+
+  const facts = await query<Record<string, any>>(
+    "SELECT id, fact, value_json, source_evidence_ids, fact_type, created_at " +
+      "FROM investigation_facts WHERE investigation_id=$1 AND tenant_id=$2 ORDER BY created_at ASC",
     [investigationId, tenantId]
   );
 
