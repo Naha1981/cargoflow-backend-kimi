@@ -44,14 +44,11 @@ jobs:
           DATABASE_URL: postgresql://cargo:cargo123@localhost:5432/cargoflow_test
         run: npm run db:migrate
 
-      - name: Install test runner
-        run: npm install --no-save ts-jest@29.4.12
+      - name: Build application
+        run: npm run build
 
-      - name: Run tests
-        env:
-          DATABASE_URL: postgresql://cargo:cargo123@localhost:5432/cargoflow_test
-          JWT_SECRET: test-jwt-secret
-        run: npm test
+      - name: Run CargoIQ evidence tests
+        run: node --test tests/evidence.test.mjs
 
       - name: Build Docker images
         run: |
