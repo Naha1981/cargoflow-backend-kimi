@@ -7,6 +7,8 @@ import { approvalsRouter } from "./approvals";
 import { shipmentsRouter } from "./shipments";
 import { alertsRouter } from "./alerts";
 import { documentsRouter } from "./documents";
+import { evidenceRouter } from "./evidence";
+import { workforceRouter } from "./workforce";
 import { query } from "../lib/db";
 import { logger } from "../lib/logger";
 import { Sentry } from "../lib/sentry";
@@ -62,6 +64,8 @@ app.use("/api/approvals", approvalsRouter);
 app.use("/api/shipments", shipmentsRouter);
 app.use("/api/alerts", alertsRouter);
 app.use("/api/documents", documentsRouter);
+app.use("/api/evidence", evidenceRouter);
+app.use("/api/workforce", workforceRouter);
 
 app.get("/api/me", authMiddleware, (req: AuthenticatedRequest, res: Response) => {
   return res.json({ user: req.user });
