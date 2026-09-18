@@ -57,5 +57,11 @@ export async function executeBrowserTask(
     [tenantId, taskId, result.status, JSON.stringify(result)]
   );
 
-  return result;
+  return {
+    status: result.status,
+    stdout: result.stdout,
+    stderr: result.stderr,
+    sessionId: result.sessionId,
+    trace: result.trace
+  };
 }
