@@ -19,6 +19,27 @@ const app = express();
 const PORT = process.env.API_PORT || 3000;
 
 app.use(securityHeaders);
+
+const corsOrigin = process.env.CORS_ORIGIN;
+app.use((req, res, next) => {
+  if (corsOrigin) {
+    const origin = req.headers.origin;
+    if (origin && corsOrigin.split(",").map((value) => value.trim()).includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+    }
+  }
+
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS");
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  next();
+});
+
 app.use(express.json({ limit: "50mb" }));
 app.use(Sentry.Handlers.requestHandler());
 
