@@ -4,7 +4,7 @@ FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat tesseract-ocr tesseract-ocr-data-eng
 WORKDIR /app
 
-COPY package*.json tsconfig.json ./
+COPY package*.json tsconfig.json tsconfig.api.json ./
 RUN npm ci
 
 COPY src/ ./src/
