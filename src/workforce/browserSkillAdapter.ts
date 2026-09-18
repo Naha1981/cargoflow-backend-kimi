@@ -27,7 +27,7 @@ export async function runBrowserSkill(task: BrowserTask): Promise<BrowserTaskRes
         env: { ...process.env }
       }
     );
-    return { status: "completed", stdout: result.stdout, stderr: result.stderr };
+    return { status: "completed", stdout: String(result.stdout), stderr: String(result.stderr) };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (/ENOENT|not found/i.test(message)) {
