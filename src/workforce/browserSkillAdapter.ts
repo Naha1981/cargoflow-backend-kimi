@@ -69,7 +69,7 @@ function extractSessionId(stdout: string): string {
   } catch {
     // Some BrowserSkill versions print the session id as plain text.
   }
-  const match = stdout.match(/\\b([A-Za-z0-9]{4})\\b/);
+  const match = stdout.match(/\b([A-Za-z0-9]{4})\b/);
   if (!match) throw new Error("BrowserSkill did not return a session id.");
   return match[1];
 }
