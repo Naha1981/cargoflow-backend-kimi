@@ -45,7 +45,7 @@ function validateUrl(url: string, allowedDomains?: string[]) {
   if (!allowedDomains?.length) return;
   const host = new URL(url).hostname.toLowerCase();
   const ok = allowedDomains.some((domain) => {
-    const d = domain.toLowerCase().replace(/^https?:\\/\\//, "").split("/")[0];
+    const d = domain.toLowerCase().replace("https://", "").replace("http://", "").split("/")[0];
     return host === d || host.endsWith("." + d);
   });
   if (!ok) throw new Error("Navigation blocked by workforce domain policy: " + host);
