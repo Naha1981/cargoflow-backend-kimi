@@ -37,7 +37,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript compile check
-        run: npm run lint
+        run: npx tsc --project tsconfig.api.json --noEmit
 
       - name: Run database migrations
         env:
