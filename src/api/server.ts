@@ -7,6 +7,8 @@ import { approvalsRouter } from "./approvals";
 import { shipmentsRouter } from "./shipments";
 import { alertsRouter } from "./alerts";
 import { documentsRouter } from "./documents";
+import { evidenceRouter } from "./evidence";
+import { workforceRouter } from "./workforce";
 import { query } from "../lib/db";
 import { logger } from "../lib/logger";
 import { Sentry } from "../lib/sentry";
@@ -17,6 +19,27 @@ const app = express();
 const PORT = process.env.API_PORT || 3000;
 
 app.use(securityHeaders);
+
+const corsOrigin = process.env.CORS_ORIGIN;
+app.use((req, res, next) => {
+  if (corsOrigin) {
+    const origin = req.headers.origin;
+    if (origin && corsOrigin.split(",").map((value) => value.trim()).includes(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+    }
+  }
+
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS");
+
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+
+  next();
+});
+
 app.use(express.json({ limit: "50mb" }));
 app.use(Sentry.Handlers.requestHandler());
 
@@ -62,6 +85,8 @@ app.use("/api/approvals", approvalsRouter);
 app.use("/api/shipments", shipmentsRouter);
 app.use("/api/alerts", alertsRouter);
 app.use("/api/documents", documentsRouter);
+app.use("/api/evidence", evidenceRouter);
+app.use("/api/workforce", workforceRouter);
 
 app.get("/api/me", authMiddleware, (req: AuthenticatedRequest, res: Response) => {
   return res.json({ user: req.user });

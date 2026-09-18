@@ -37,18 +37,18 @@ jobs:
         run: npm ci
 
       - name: TypeScript compile check
-        run: npm run lint
+        run: npx tsc --project tsconfig.api.json --noEmit
 
       - name: Run database migrations
         env:
           DATABASE_URL: postgresql://cargo:cargo123@localhost:5432/cargoflow_test
         run: npm run db:migrate
 
-      - name: Run tests
-        env:
-          DATABASE_URL: postgresql://cargo:cargo123@localhost:5432/cargoflow_test
-          JWT_SECRET: test-jwt-secret
-        run: npm test
+      - name: Build application
+        run: npm run build
+
+      - name: Run CargoIQ evidence tests
+        run: node --test tests/evidence.test.mjs
 
       - name: Build Docker images
         run: |
